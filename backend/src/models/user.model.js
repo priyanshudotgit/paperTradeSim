@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ["male", "female", "other"],
+        enum: ["male", "female", "other", "na"],
+        default: "na",
     },
     email: {
         type: String,
@@ -57,10 +58,9 @@ const userSchema = new mongoose.Schema({
 
 // hash password before saving
 userSchema.pre("save", async function(next){
-    if(!this.isModified("password")) return next();
+    if(!this.isModified("password")) return;
 
     this.password = await bcrypt.hash(this.password, 10);
-    next();
 });
 
 // check password
@@ -69,8 +69,8 @@ userSchema.methods.isPasswordCorrect = async function(password){
 };
 
 // jwt token
-userSchema.methods.generateAccessToken = async function(){
-    return await jwt.sign(
+userSchema.methods.generateAccessToken = function(){
+    return jwt.sign(
         {
             _id: this._id,
             username: this.username,
@@ -84,8 +84,8 @@ userSchema.methods.generateAccessToken = async function(){
     )
 };
 
-userSchema.methods.generateRefreshToken = async function(refreshToken){
-    return await jwt.sign(
+userSchema.methods.generateRefreshToken = function(){
+    return jwt.sign(
         {
             _id: this._id,
         },
